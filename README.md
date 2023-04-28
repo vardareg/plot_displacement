@@ -9,21 +9,6 @@ The plot_displacement function is designed to process and visualize displacement
     A plot of the masked displacement data with the cross-section line (A-A') and its labels.
     A final plot showing the masked displacement data over the DEM background with fault lines from the shapefile, along with the cross-section line (A-A') and its labels.
 
-# Dependencies
-
-The function requires the following Python packages:
-
-    h5py
-    numpy
-    matplotlib
-    datetime
-    geopy
-    rasterio
-    geopandas
-
-Make sure to install these packages before running the plot_displacement function.
-
-    pip install -r requirements.txt
 # Usage
  The plot_displacement function included in this repository provides the following features:
     Reads displacement time series data from an HDF5 file and applies a mask from another HDF5 file.
