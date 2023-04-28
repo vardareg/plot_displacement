@@ -28,7 +28,6 @@ Make sure to install these packages before running the plot_displacement functio
 # Input Parameters
 
 The plot_displacement function takes the following input parameters:
-
     timeseries_file: Path to the time series file (HDF5 format) containing displacement data.
     mask_file: Path to the mask file (HDF5 format) containing a mask to be applied to the displacement data.
     dem_file: Path to the digital elevation model (DEM) file (GeoTIFF format) for the study area.
