@@ -1,7 +1,7 @@
 # Plot Displacement
 This repository contains a Python script that processes and visualizes displacement data resulting from earthquakes or other geophysical events. The plot_displacement function generates four different plots to help you better understand the spatial distribution of displacement and its impact on the region of interest.
 
-Overview
+# Overview
 
 The plot_displacement function is designed to process and visualize displacement data from a time series file, along with other geospatial data such as a digital elevation model (DEM) and fault lines from a shapefile. The function generates four different plots:
 
@@ -10,7 +10,7 @@ The plot_displacement function is designed to process and visualize displacement
     A plot of the masked displacement data with the cross-section line (A-A') and its labels.
     A final plot showing the masked displacement data over the DEM background with fault lines from the shapefile, along with the cross-section line (A-A') and its labels.
 
-Dependencies
+# Dependencies
 
 The function requires the following Python packages:
 
