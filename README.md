@@ -9,8 +9,8 @@ The plot_displacement function is designed to process and visualize displacement
     A plot of the masked displacement data with the cross-section line (A-A') and its labels.
     A final plot showing the masked displacement data over the DEM background with fault lines from the shapefile, along with the cross-section line (A-A') and its labels.
 # Setup
-    git clone 
-
+    git clone https://github.com/vardareg/plot_displacement.git
+    pip install .
 # Usage
  The plot_displacement function included in this repository provides the following features:
     Reads displacement time series data from an HDF5 file and applies a mask from another HDF5 file.
