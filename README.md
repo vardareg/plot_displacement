@@ -4,7 +4,6 @@ This repository contains a Python script that processes and visualizes displacem
 # Overview
 
 The plot_displacement function is designed to process and visualize displacement data from a time series file, along with other geospatial data such as a digital elevation model (DEM) and fault lines from a shapefile. The function generates four different plots:
-
     A preview plot of the masked displacement data (in centimeters) on a 2D grid.
     A cross-section plot of the displacement data along a specified line (A-A').
     A plot of the masked displacement data with the cross-section line (A-A') and its labels.
