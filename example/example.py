@@ -1,10 +1,10 @@
 from displacement_visualization.plot_displacement import plot_displacement
 import datetime
 # Example 
-timeseries_file = 'geo_timeseries_ERA5_demErr.h5'# required
-mask_file = 'geo_maskTempCoh.h5'# required
-dem_file = 'demLat_N37_N40_Lon_E038_E042.tif'# required
-shp_file_path = 'MTA_fay.shp'# required
+timeseries_file = 'example\geo_timeseries_ERA5_demErr.h5'# required
+mask_file = 'example\geo_maskTempCoh.h5'# required
+dem_file = 'example\demLat_N37_N40_Lon_E038_E042.tif'# required
+shp_file_path = 'example\MTA_fay.shp'# required
 earthquake_date = datetime.datetime(2020, 1, 24) # required
 # Cross section parametreters y,x (Latitude,Longtitude)
 start_point = (38.19, 39.04)
