@@ -4,7 +4,7 @@ setup(
     name="displacement-visualization",
     version="0.1.0",
     packages=find_packages(),
-    python_requires= "=3.11"
+    python_requires= "=3.11",
     install_requires=[
         "h5py==3.8.0",
         "numpy==1.24.2",
