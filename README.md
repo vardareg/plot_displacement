@@ -23,6 +23,7 @@ The function requires the following Python packages:
     geopandas
 
 Make sure to install these packages before running the plot_displacement function.
+    pip install -r requirements.txt
 
 # Input Parameters
 
