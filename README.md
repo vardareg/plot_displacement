@@ -38,3 +38,13 @@ The plot_displacement function takes the following input parameters:
     end_point: Latitude and longitude of the end point (A') of the cross-section line as a tuple (float, float).
     xlim: (Optional) Limits for the x-axis (longitude) in the final plot as a tuple (float, float). Default is None.
     ylim: (Optional) Limits for the y-axis (latitude) in the final plot as a tuple (float, float). Default is None.
+
+# Usage
+ The plot_displacement function included in this repository provides the following features:
+
+    Reads displacement time series data from an HDF5 file and applies a mask from another HDF5 file.
+    Converts the displacement data to a 2D grid with geographical coordinates.
+    Generates a preview plot of the masked displacement data (in centimeters) on a 2D grid.
+    Plots a cross-section of the displacement data along a specified line (A-A') to visualize the profile of the displacement.
+    Creates a plot of the masked displacement data with the cross-section line (A-A') and its labels.
+    Generates a final plot that overlays the masked displacement data on a digital elevation model (DEM) background, along with fault lines from a shapefile and the cross-section line (A-A') and its labels.
