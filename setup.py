@@ -11,7 +11,7 @@ setup(
         "matplotlib==3.7.1",
         "geopy==2.3.0",
         "rasterio==1.3.6",
-        "geopandas==0.12.2",
+        "geopandas>=1.1.2",
     ],
     author="Egehan Vardar",
     author_email="egehanvardar@gmail.com",
