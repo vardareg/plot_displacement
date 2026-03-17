@@ -1,13 +1,53 @@
-import h5py
-import numpy as np
-import matplotlib.pyplot as plt
 import datetime
-from geopy.distance import geodesic
-import rasterio
-from rasterio.plot import show
-import geopandas as gpd
 
-def plot_displacement(timeseries_file, mask_file, dem_file, shp_file_path, earthquake_date, start_point, end_point, xlim=None, ylim=None):
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
+import geopandas as gpd
+import rasterio
+from geopy.distance import geodesic
+from rasterio.plot import show
+
+
+def _build_axis(origin, step, size):
+    """Build a coordinate axis matching the raster size for positive or negative step."""
+    return origin + np.arange(size) * step
+
+
+def _get_straddling_date_indices(dates, earthquake_date):
+    """Return indices of the closest dates before and after the event date."""
+    before_candidates = [i for i, date in enumerate(dates) if date < earthquake_date]
+    after_candidates = [i for i, date in enumerate(dates) if date > earthquake_date]
+
+    if not before_candidates or not after_candidates:
+        raise ValueError(
+            "earthquake_date must be strictly between available time-series dates. "
+            f"First available date: {dates[0].date()}, last available date: {dates[-1].date()}, "
+            f"earthquake_date: {earthquake_date.date()}"
+        )
+
+    return max(before_candidates), min(after_candidates)
+
+
+def _validate_cross_section_index(row, col, nrows, ncols, label):
+    if not (0 <= row < nrows and 0 <= col < ncols):
+        raise ValueError(
+            f"{label} maps outside displacement grid. "
+            f"Computed indices (row={row}, col={col}), "
+            f"valid row range [0, {nrows - 1}], col range [0, {ncols - 1}]."
+        )
+
+def plot_displacement(
+    timeseries_file,
+    mask_file,
+    dem_file,
+    shp_file_path,
+    earthquake_date,
+    start_point,
+    end_point,
+    xlim=None,
+    ylim=None,
+):
     """
 Plots masked displacement data, cross-section plot, masked displacement with cross-section line, and masked
 displacement over DEM background with fault lines from a shapefile.
@@ -63,48 +103,38 @@ This function generates four plots:
 
     # Convert dates to datetime objects
     dates = [datetime.datetime.strptime(date.decode('utf-8'), '%Y%m%d') for date in dates]
-    begin_row = 0
-    end_row = displacement.shape[1]
-    begin_column = 0
-    end_column = displacement.shape[2]
+    nrows = displacement.shape[1]
+    ncols = displacement.shape[2]
 
-    # Convert row and column indices to latitude and longitude
-    begin_lat = lat_origin + begin_row * lat_step
-    end_lat = lat_origin + end_row * lat_step
-    begin_lon = lon_origin + begin_column * lon_step
-    end_lon = lon_origin + end_column * lon_step
-
-    # Extract the masked displacement time series data along the bounding_box
-    bounding_box_displacement_masked = displacement_masked[:, begin_row:end_row, begin_column:end_column]
+    lons = _build_axis(lon_origin, lon_step, ncols)
+    lats = _build_axis(lat_origin, lat_step, nrows)
+    begin_lon, end_lon = lons.min(), lons.max()
+    begin_lat, end_lat = lats.min(), lats.max()
 
     # Find the indices of the dates immediately before and after the earthquake
-    index_before = max(i for i, date in enumerate(dates) if date < earthquake_date)
-    index_after = min(i for i, date in enumerate(dates) if date > earthquake_date)
+    index_before, index_after = _get_straddling_date_indices(dates, earthquake_date)
 
     # Get the dates before and after the earthquake
     date_before = dates[index_before]
     date_after = dates[index_after]
 
     # Compute the  in displacement between the two dates for the masked data
-    displacement__masked = bounding_box_displacement_masked[index_after, :, :] - bounding_box_displacement_masked[index_before, :, :]
-    # Prepare the longitude and latitude arrays
-    lons = np.arange(begin_lon, end_lon, lon_step)
-    lats = np.arange(begin_lat, end_lat, lat_step)
+    displacement_masked_diff = displacement_masked[index_after, :, :] - displacement_masked[index_before, :, :]
 
     # Create a figure with 600 DPI
     plt.figure(dpi=600)
 
     # Convert displacement  to centimeters
-    displacement__masked_cm = displacement__masked * 100
+    displacement_masked_cm = displacement_masked_diff * 100
 
     # Calculate the color limits for equal positive and negative range
-    vmin = np.nanmin(displacement__masked_cm)
-    vmax = np.nanmax(displacement__masked_cm)
+    vmin = np.nanmin(displacement_masked_cm)
+    vmax = np.nanmax(displacement_masked_cm)
     clim = max(abs(vmin), abs(vmax))
 
     # Preview Plot
 
-    plt.imshow(displacement__masked_cm, cmap='jet', aspect='auto', extent=[begin_lon, end_lon, end_lat, begin_lat], interpolation='bicubic', vmin=-clim, vmax=clim)
+    plt.imshow(displacement_masked_cm, cmap='jet', aspect='auto', extent=[begin_lon, end_lon, begin_lat, end_lat], interpolation='bicubic', vmin=-clim, vmax=clim)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.colorbar(label='Displacement  (cm)')
@@ -117,12 +147,15 @@ This function generates four plots:
     end_row = int(round((end_point[0] - lat_origin) / lat_step))
     end_col = int(round((end_point[1] - lon_origin) / lon_step))
 
+    _validate_cross_section_index(start_row, start_col, nrows, ncols, "start_point")
+    _validate_cross_section_index(end_row, end_col, nrows, ncols, "end_point")
+
     # Extract the displacement data along the cross-section line
     num_points = max(abs(end_row - start_row), abs(end_col - start_col)) + 1
     cross_section_rows = np.linspace(start_row, end_row, num_points, dtype=int)
     cross_section_cols = np.linspace(start_col, end_col, num_points, dtype=int)
 
-    cross_section_displacement = displacement__masked[cross_section_rows, cross_section_cols] *100
+    cross_section_displacement = displacement_masked_diff[cross_section_rows, cross_section_cols] * 100
 
     # Calculate the distance between the points along the cross-section line in kilometers
     point_distances = [geodesic((lats[row], lons[col]), (lats[start_row], lons[start_col])).km for row, col in zip(cross_section_rows, cross_section_cols)]
@@ -137,7 +170,7 @@ This function generates four plots:
 
     # Add the cross-section line to the first plot
     plt.figure(dpi=600)
-    plt.imshow(displacement__masked_cm, cmap='jet', aspect='auto', extent=[begin_lon, end_lon, end_lat, begin_lat], interpolation='bicubic', vmin=-clim, vmax=clim)
+    plt.imshow(displacement_masked_cm, cmap='jet', aspect='auto', extent=[begin_lon, end_lon, begin_lat, end_lat], interpolation='bicubic', vmin=-clim, vmax=clim)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.colorbar(label='Displacement  (cm)')
@@ -158,13 +191,13 @@ This function generates four plots:
 
     # Create the figure with the DEM background and the displacement data
     fig, ax = plt.subplots(dpi=600)
-    show(dem_data, ax=ax, transform=dem_transform, cmap= "gray", alpha=1)
-    plt.imshow(displacement__masked_cm, cmap="jet", aspect='auto', extent=[begin_lon, end_lon, end_lat, begin_lat], interpolation='bicubic', vmin=-clim, vmax=clim, alpha=1)
+    show(dem_data, ax=ax, transform=dem_transform, cmap="gray", alpha=1)
+    plt.imshow(displacement_masked_cm, cmap="jet", aspect='auto', extent=[begin_lon, end_lon, begin_lat, end_lat], interpolation='bicubic', vmin=-clim, vmax=clim, alpha=1)
 
     shp_file = gpd.read_file(shp_file_path)
     shp_file.plot(ax=plt.gca(), facecolor='none', edgecolor='black', label='Faults',linewidth=0.5)
 
-    plt.legend()# Add labels, title, and colorbar
+    plt.legend()  # Add labels, title, and colorbar
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.colorbar(label='Displacement  (cm)',shrink=0.8)
@@ -176,8 +209,10 @@ This function generates four plots:
     plt.text(end_point[1], end_point[0], "A'", fontsize=12, color='black', ha='right', va='baseline')
     plt.legend()
     plt.gca().set_aspect('equal')
-    plt.xlim(xlim)
-    plt.ylim(ylim)
+    if xlim is not None:
+        plt.xlim(xlim)
+    if ylim is not None:
+        plt.ylim(ylim)
     plt.show()
 
 # Example 
